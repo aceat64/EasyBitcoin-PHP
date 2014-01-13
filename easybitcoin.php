@@ -60,18 +60,34 @@ class Bitcoin {
 	public $error = null;
 	private $id = 0;
 
+	/**
+	 * @param string $username username or connection string
+	 * @param string $password
+	 * @param string $host
+	 * @param int $port
+	 * @param string $proto
+	 * @param null $url
+	 */
 	function __construct($username, $password, $host = 'localhost', $port = 8332, $proto = 'http', $url = null) {
-		$this->username = $username;
-		$this->password = $password;
-		$this->host = $host;
-		$this->port = $port;
-		$this->url = $url;
+		if (func_num_args() == 1) {
+			$this->connection_string = $username;
+		} else {
+			$this->username = $username;
+			$this->password = $password;
+			$this->host = $host;
+			$this->port = $port;
+			$this->url = $url;
+        	}
 	}
 
 	function __call($method, $params) {
 		$this->error = null;
 
-		$url = "{$this->proto}://{$this->username}:{$this->password}@{$this->host}:{$this->port}/{$this->url}";
+		if (!empty($this->connection_string)) {
+			$url = "{$this->connection_string}/{$this->url}";
+		} else {
+			$url = "{$this->proto}://{$this->username}:{$this->password}@{$this->host}:{$this->port}/{$this->url}";
+        	}
 
 		// If no parameters are passed, this will be an empty array
 		$params = array_values($params);
@@ -103,21 +119,30 @@ class Bitcoin {
 
 		// If the status is not 200, something is wrong
 		$status = curl_getinfo($curl,CURLINFO_HTTP_CODE);
-		if ($status != 200) {
-			$this->error = $status;
-			return false;
-		}
 
 		curl_close($curl);
 
 		if ($this->full) {
 			return $response;
 		} else {
-			if ($response['error'] === null) {
+			if ($status == 200 && $response['error'] === null) {
 				return $response['result'];
 			} else {
 				// An error occurred
-				$this->error = $response['error'];
+				if (is_string($response['error'])) {
+					$this->error = $response['error'];
+				} elseif (is_array($response['error'])) {
+					$this->error = '';
+					if (!empty($response['error']['message'])) {
+						$this->error .= $response['error']['message'];
+					}
+					if (!empty($response['error']['code'])) {
+						$this->error .= " (code {$response['error']['code']})";
+					}
+				} else {
+					$this->error = str_replace(array("\n", "\r"), '', print_r($response['error'], true));
+				}
+
 				return false;
 			}
 		}
