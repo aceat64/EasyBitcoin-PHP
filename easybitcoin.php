@@ -34,44 +34,69 @@ THE SOFTWARE.
 // Initialize Bitcoin connection/object
 $bitcoin = new Bitcoin('username','password');
 
-// Optionally, you can specify a host, port and protocol (HTTP and HTTPS). Default is localhost:8332
+// Optionally, you can specify a host, port and protocol (HTTP and HTTPS).
 $bitcoin = new Bitcoin('username','password','host','port','http');
+// Defaults are:
+//	host = localhost
+//	port = 8332
+//	proto = http
 
-// Set $bitcoin->full to true and calls will return the result, error message (if any) and request id.
-$bitcoin->full = false;
-
-// Make calls to bitcoind as methods for your object. Examples:
+// Make calls to bitcoind as methods for your object. Responses are returned as an array.
+// Examples:
 $bitcoin->getinfo();
 $bitcoin->getrawtransaction('0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098',1);
 $bitcoin->getblock('000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f');
 
-// When a call fails, it will return false and put the error message in $bitcoin->error
+// The full response (not usually needed) is stored in $this->response while the raw JSON is stored in $this->raw_response
+
+// When a call fails for any reason, it will return false and put the error message in $this->error
+// Example:
 echo $bitcoin->error;
+
+// The HTTP status code can be found in $this->status and will either be a valid HTTP status code or will be 0 if cURL was unable to connect.
+// Example:
+echo $bitcoin->status;
 
 */
 
 class Bitcoin {
+	// Configuration options
 	public $username;
 	public $password;
+	public $proto;
 	public $host;
 	public $port;
 	public $url;
-	public $full = false;
-	public $error = null;
+
+	// Information and debugging
+	public $status;
+	public $error;
+	public $raw_response;
+	public $response;
 	private $id = 0;
 
+	/**
+	 * @param string $username
+	 * @param string $password
+	 * @param string $host
+	 * @param int $port
+	 * @param string $proto
+	 * @param string $url
+	 */
 	function __construct($username, $password, $host = 'localhost', $port = 8332, $proto = 'http', $url = null) {
 		$this->username = $username;
 		$this->password = $password;
+		$this->proto = $proto;
 		$this->host = $host;
 		$this->port = $port;
 		$this->url = $url;
 	}
 
 	function __call($method, $params) {
+		$this->status = null;
 		$this->error = null;
-
-		$url = "{$this->proto}://{$this->username}:{$this->password}@{$this->host}:{$this->port}/{$this->url}";
+		$this->raw_response = null;
+		$this->response = null;
 
 		// If no parameters are passed, this will be an empty array
 		$params = array_values($params);
@@ -87,7 +112,7 @@ class Bitcoin {
 		));
 
 		// Build the cURL session
-		$curl = curl_init($url);
+		$curl = curl_init("{$this->proto}://{$this->username}:{$this->password}@{$this->host}:{$this->port}/{$this->url}");
 		$options = array(
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_FOLLOWLOCATION => true,
@@ -99,27 +124,46 @@ class Bitcoin {
 		curl_setopt_array($curl, $options);
 
 		// Execute the request and decode to an array
-		$response = json_decode(curl_exec($curl),true);
+		$this->raw_response = curl_exec($curl);
+		$this->response = json_decode($this->raw_response,true);
 
 		// If the status is not 200, something is wrong
-		$status = curl_getinfo($curl,CURLINFO_HTTP_CODE);
-		if ($status != 200) {
-			$this->error = $status;
-			return false;
-		}
+		$this->status = curl_getinfo($curl,CURLINFO_HTTP_CODE);
+
+		// If there was no error, this will be an empty string
+		$curl_error = curl_error($curl);
 
 		curl_close($curl);
 
-		if ($this->full) {
-			return $response;
-		} else {
-			if ($response['error'] === null) {
-				return $response['result'];
-			} else {
-				// An error occurred
-				$this->error = $response['error'];
-				return false;
+		if (!empty($curl_error)) {
+			$this->error = $curl_error;
+		}
+
+		if ($this->response['error']) {
+			// If bitcoind returned an error, put that in $this->error
+			$this->error = $this->response['error']['message'];
+		} elseif($this->status != 200) {
+			// If bitcoind didn't return a nice error message, we need to make our own
+			switch($this->status) {
+				case 400:
+					$this->error = 'HTTP_BAD_REQUEST';
+					break;
+				case 401:
+					$this->error = 'HTTP_UNAUTHORIZED';
+					break;
+				case 403:
+					$this->error = 'HTTP_FORBIDDEN';
+					break;
+				case 404:
+					$this->error = 'HTTP_NOT_FOUND';
+					break;
 			}
+		}
+
+		if ($this->error) {
+			return false;
+		} else {
+			return $this->response['result'];
 		}
 	}
 }
