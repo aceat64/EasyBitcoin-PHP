@@ -90,12 +90,15 @@ class Bitcoin {
      * @param string $url
      */
     function __construct($username, $password, $host = 'localhost', $port = 8332, $url = null) {
-        $this->username = $username;
-        $this->password = $password;
-        $this->proto    = 'http';
-        $this->host     = $host;
-        $this->port     = $port;
-        $this->url      = $url;
+        $this->username      = $username;
+        $this->password      = $password;
+        $this->host          = $host;
+        $this->port          = $port;
+        $this->url           = $url;
+
+        // Set some defaults
+        $this->proto         = 'http';
+        $this->CACertificate = null;
     }
 
     /**
@@ -138,7 +141,7 @@ class Bitcoin {
 
         if ($this->proto == 'https') {
             // If the CA Certificate was specified we change CURL to look for it
-            if ($this->CACertificate != '') {
+            if ($this->CACertificate != null) {
                 $options[CURLOPT_CAINFO] = $this->CACertificate;
                 $options[CURLOPT_CAPATH] = DIRNAME($this->CACertificate);
             }
