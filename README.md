@@ -12,9 +12,13 @@ Getting Started
 
 	`$bitcoin = new Bitcoin('username','password');`
 
-	Optionally, you can specify a host, port and protocol (HTTP and HTTPS). Default is HTTP on localhost port 8332.
+	Optionally, you can specify a host, port. Default is HTTP on localhost port 8332.
 
-	`$bitcoin = new Bitcoin('username','password','localhost','8332','http');`
+	`$bitcoin = new Bitcoin('username','password','localhost','8332');`
+
+	If you wish to make an SSL connection you can set an optional CA certificate or leave blank
+	`$bitcoin->setSSL('/full/path/to/mycertificate.cert');`
+
 3. Make calls to bitcoind as methods for your object. Examples:
 
 	`$bitcoin->getinfo();`
