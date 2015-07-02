@@ -2,7 +2,7 @@
 /*
 EasyBitcoin-PHP
 
-A simple class for making calls to Bitcoin's API using PHP.
+Uma classe simples para fazer chamadas para a API do Bitcoin usando PHP.
 https://github.com/aceat64/EasyBitcoin-PHP
 
 ====================
@@ -111,7 +111,7 @@ class Bitcoin {
         //Se nenhum parâmetros for passado, este será uma matriz vazia
         $params = array_values($params);
 
-// O ID deve ser exclusivo para cada chamada
+    // O ID deve ser exclusivo para cada chamada
         $this->id++;
 
 // Fazendo uma solicitação
