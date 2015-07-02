@@ -1,34 +1,34 @@
 EasyBitcoin-PHP
 ===============
 
-A simple class for making calls to Bitcoin's API using PHP.
+Uma classe simples para fazer chamadas para a API do Bitcoin usando PHP.
 
-Getting Started
+Começando
 ---------------
-1. Include easybitcoin.php into your PHP script:
+1. Incluir easybitcoin.php em seu script PHP:
 
-	`require_once('easybitcoin.php');`
-2. Initialize Bitcoin connection/object:
+`Require_once ('easybitcoin.php'); '
+2. Inicializar Bitcoin conexão / object:
 
-	`$bitcoin = new Bitcoin('username','password');`
+`$ Bitcoin = new Bitcoin ('username', 'password'); '
 
-	Optionally, you can specify a host, port. Default is HTTP on localhost port 8332.
+Opcionalmente, você pode especificar um host, a porta. O padrão é HTTP na porta localhost 8332.
 
-	`$bitcoin = new Bitcoin('username','password','localhost','8332');`
+`$ Bitcoin = new Bitcoin ('username', 'password', 'localhost' '8332',);`
 
-	If you wish to make an SSL connection you can set an optional CA certificate or leave blank
-	`$bitcoin->setSSL('/full/path/to/mycertificate.cert');`
+Se você quiser fazer uma conexão SSL é possível definir um certificado CA opcional ou deixe em branco
+`$ Bitcoin-> setSSL ('/ full / path / to / mycertificate.cert'); '
 
-3. Make calls to bitcoind as methods for your object. Examples:
+3. Fazer chamadas para bitcoind como métodos para o seu objeto. Exemplos:
 
-	`$bitcoin->getinfo();`
-	`$bitcoin->getrawtransaction('0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098',1);`
-	`$bitcoin->getblock('000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f');`
+`$ Bitcoin-> getinfo ();`
+`$ Bitcoin-> getrawtransaction ('0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098', 1); '
+`$ Bitcoin-> getblock ('000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'); '
 
-Additional Info
+Informações Adicionais
 ---------------
-* When a call fails for any reason, it will return false and put the error message in $bitcoin->error
+* Quando uma chamada falhar por algum motivo, ele irá retornar falso e colocar a mensagem de erro em $ bitcoin-> erro
 
-* The HTTP status code can be found in $bitcoin->status and will either be a valid HTTP status code or will be 0 if cURL was unable to connect.
+* O código de status HTTP pode ser encontrado em $ bitcoin-> estado e vai ser um código de status HTTP válido ou será 0 se cURL não pôde se conectar.
 
-* The full response (not usually needed) is stored in $bitcoin->response while the raw JSON is stored in $bitcoin->raw_response
+* A resposta completa (sem sempre necessárias) é armazenado em $ bitcoin-> resposta enquanto o JSON raw é armazenado em $ bitcoin-> raw_response
