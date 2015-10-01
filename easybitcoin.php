@@ -2,69 +2,62 @@
 /*
 EasyBitcoin-PHP
 
-A simple class for making calls to Bitcoin's API using PHP.
+Uma classe simples para fazer chamadas para a API do Bitcoin usando PHP.
 https://github.com/aceat64/EasyBitcoin-PHP
 
 ====================
 
 The MIT License (MIT)
 
-Copyright (c) 2013 Andrew LeCody
+A permissão é concedida, a título gratuito, a qualquer pessoa que obtenha uma cópia
+deste software e arquivos de documentação associados (o "Software"), para lidar
+o Software sem restrição, incluindo, sem limitação, os direitos
+para usar, copiar, modificar, mesclar, publicar, distribuir, sub-licenciar e / ou vender
+cópias do Software, e permitir que as pessoas a quem o Software é
+fornecido o façam, sujeito às seguintes condições:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+O aviso de copyright acima e este aviso de permissão devem ser incluídos em
+todas as cópias ou partes substanciais do Software.
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
+O SOFTWARE É FORNECIDO "COMO ESTÁ", SEM GARANTIA DE QUALQUER TIPO, expressa ou implícita, INCLUINDO, SEM LIMITAÇÃO, AS GARANTIAS DE COMERCIALIZAÇÃO, ADEQUAÇÃO A UM DETERMINADO FIM E NÃO VIOLAÇÃO. EM NENHUM CASO OS AUTORES OU DETENTORES DE DIREITOS AUTORAIS SERÁ RESPONSÁVEL POR QUALQUER RECLAMAÇÃO, DANOS OU OUTRAS RESPONSABILIDADES, SEJA EM UMA AÇÃO DE CONTRATO, DELITO OU OUTRA, DECORRENTE DE,
+DE OU EM CONEXÃO COM O SOFTWARE OU O USO OU OUTRA APLICAÇÃO
+O SOFTWARE.
 ====================
 
-// Initialize Bitcoin connection/object
+// Inicializando Bitcoin conexão/objeto
 $bitcoin = new Bitcoin('username','password');
 
-// Optionally, you can specify a host and port.
+// Opcionalmente, você pode especificar um host e porta.
 $bitcoin = new Bitcoin('username','password','host','port');
 // Defaults are:
 //	host = localhost
 //	port = 8332
 //	proto = http
 
-// If you wish to make an SSL connection you can set an optional CA certificate or leave blank
-// This will set the protocol to HTTPS and some CURL flags
+// Se você quiser fazer uma conexão SSL é possível definir um certificado CA opcional ou deixe em branco
+// Isto irá definir o protocolo para HTTPS e algumas bandeiras CURL
 $bitcoin->setSSL('/full/path/to/mycertificate.cert');
 
-// Make calls to bitcoind as methods for your object. Responses are returned as an array.
-// Examples:
+// Fazer chamadas para bitcoind como métodos para o seu objeto. As respostas são retornadas como uma matriz.
+// Exemplos:
 $bitcoin->getinfo();
 $bitcoin->getrawtransaction('0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098',1);
 $bitcoin->getblock('000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f');
 
-// The full response (not usually needed) is stored in $this->response while the raw JSON is stored in $this->raw_response
+// A resposta completa (são sempre necessárias) é armazenado em $ this-> resposta enquanto o JSON raw é armazenado em $ this-> raw_response
 
-// When a call fails for any reason, it will return FALSE and put the error message in $this->error
-// Example:
+// Quando uma chamada falhar por algum motivo, ele irá retornar FALSE e colocar a mensagem de erro em $ this-> erro
+// Exemplo:
 echo $bitcoin->error;
 
-// The HTTP status code can be found in $this->status and will either be a valid HTTP status code or will be 0 if cURL was unable to connect.
-// Example:
+// O código de status HTTP pode ser encontrado em $ this-> status e vai ser um código de status HTTP válido ou será 0 se cURL não pôde se conectar.
+// Exemplo:
 echo $bitcoin->status;
 
 */
 
 class Bitcoin {
-    // Configuration options
+    // Configurando Opções
     private $username;
     private $password;
     private $proto;
@@ -73,7 +66,7 @@ class Bitcoin {
     private $url;
     private $CACertificate;
 
-    // Information and debugging
+    // Informações e depuração
     public $status;
     public $error;
     public $raw_response;
@@ -96,7 +89,7 @@ class Bitcoin {
         $this->port          = $port;
         $this->url           = $url;
 
-        // Set some defaults
+        // Definir alguns padrões
         $this->proto         = 'http';
         $this->CACertificate = null;
     }
@@ -115,20 +108,20 @@ class Bitcoin {
         $this->raw_response = null;
         $this->response     = null;
 
-        // If no parameters are passed, this will be an empty array
+        //Se nenhum parâmetros for passado, este será uma matriz vazia
         $params = array_values($params);
 
-        // The ID should be unique for each call
+    // O ID deve ser exclusivo para cada chamada
         $this->id++;
 
-        // Build the request, it's ok that params might have any empty array
+// Fazendo uma solicitação
         $request = json_encode(array(
             'method' => $method,
             'params' => $params,
             'id'     => $this->id
         ));
 
-        // Build the cURL session
+        // Construindo uma sessão Curl
         $curl    = curl_init("{$this->proto}://{$this->username}:{$this->password}@{$this->host}:{$this->port}/{$this->url}");
         $options = array(
             CURLOPT_RETURNTRANSFER => TRUE,
@@ -139,34 +132,34 @@ class Bitcoin {
             CURLOPT_POSTFIELDS     => $request
         );
 
-        // This prevents users from getting the following warning when open_basedir is set:
-        // Warning: curl_setopt() [function.curl-setopt]: CURLOPT_FOLLOWLOCATION cannot be activated when in safe_mode or an open_basedir is set
+        // Isso impede que os usuários recebendo o seguinte aviso quando open_basedir está definido:
+        // Aviso: curl_setopt () [function.curl-setopt]: CURLOPT_FOLLOWLOCATION não podem ser ativados quando em safe_mode ou um open_basedir é definido
         if (ini_get('open_basedir')) {
             unset($options[CURLOPT_FOLLOWLOCATION]);
         }
 
         if ($this->proto == 'https') {
-            // If the CA Certificate was specified we change CURL to look for it
+        // Se o Certificado CA foi especificado mudamos CURL para ele
             if ($this->CACertificate != null) {
                 $options[CURLOPT_CAINFO] = $this->CACertificate;
                 $options[CURLOPT_CAPATH] = DIRNAME($this->CACertificate);
             }
             else {
-                // If not we need to assume the SSL cannot be verified so we set this flag to FALSE to allow the connection
+        // Se não precisamos assumir o SSL não pode ser verificada por isso, definir esse sinalizador para FALSE para permitir a conexão
                 $options[CURLOPT_SSL_VERIFYPEER] = FALSE;
             }
         }
 
         curl_setopt_array($curl, $options);
 
-        // Execute the request and decode to an array
+        // Executar o pedido e decodificar a uma matriz
         $this->raw_response = curl_exec($curl);
         $this->response     = json_decode($this->raw_response, TRUE);
 
-        // If the status is not 200, something is wrong
+        // Se o status não for 200, algo está errado
         $this->status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
-        // If there was no error, this will be an empty string
+        // Se não houve erro, esta será uma String vazia
         $curl_error = curl_error($curl);
 
         curl_close($curl);
@@ -176,11 +169,11 @@ class Bitcoin {
         }
 
         if ($this->response['error']) {
-            // If bitcoind returned an error, put that in $this->error
+            // Se bitcoind retornou um erro, colocar isso em $ this-> erro
             $this->error = $this->response['error']['message'];
         }
         elseif ($this->status != 200) {
-            // If bitcoind didn't return a nice error message, we need to make our own
+            // Se bitcoind não retornou uma mensagem de erro agradável, precisamos fazer a nossa própria
             switch ($this->status) {
                 case 400:
                     $this->error = 'HTTP_BAD_REQUEST';
