@@ -90,8 +90,8 @@ class Bitcoin {
      * @param string $url
      */
     function __construct($username, $password, $host = 'localhost', $port = 8332, $url = null) {
-        $this->username      = html_entity_decode($username);
-        $this->password      = html_entity_decode($password);
+        $this->username      = $username;
+        $this->password      = $password;
         $this->host          = $host;
         $this->port          = $port;
         $this->url           = $url;
