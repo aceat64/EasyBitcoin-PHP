@@ -51,19 +51,22 @@ $bitcoin->getinfo();
 $bitcoin->getrawtransaction('0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098',1);
 $bitcoin->getblock('000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f');
 
-// The full response (not usually needed) is stored in $this->response while the raw JSON is stored in $this->raw_response
+// The full response (not usually needed) is stored in $this->response
+// while the raw JSON is stored in $this->raw_response
 
 // When a call fails for any reason, it will return FALSE and put the error message in $this->error
 // Example:
 echo $bitcoin->error;
 
-// The HTTP status code can be found in $this->status and will either be a valid HTTP status code or will be 0 if cURL was unable to connect.
+// The HTTP status code can be found in $this->status and will either be a valid HTTP status code
+// or will be 0 if cURL was unable to connect.
 // Example:
 echo $bitcoin->status;
 
 */
 
-class Bitcoin {
+class Bitcoin
+{
     // Configuration options
     private $username;
     private $password;
@@ -89,7 +92,8 @@ class Bitcoin {
      * @param string $proto
      * @param string $url
      */
-    function __construct($username, $password, $host = 'localhost', $port = 8332, $url = null) {
+    public function __construct($username, $password, $host = 'localhost', $port = 8332, $url = null)
+    {
         $this->username      = $username;
         $this->password      = $password;
         $this->host          = $host;
@@ -104,12 +108,14 @@ class Bitcoin {
     /**
      * @param string|null $certificate
      */
-    function setSSL($certificate = null) {
+    public function setSSL($certificate = null)
+    {
         $this->proto         = 'https'; // force HTTPS
         $this->CACertificate = $certificate;
     }
 
-    function __call($method, $params) {
+    public function __call($method, $params)
+    {
         $this->status       = null;
         $this->error        = null;
         $this->raw_response = null;
@@ -133,29 +139,30 @@ class Bitcoin {
         $options = array(
             CURLOPT_HTTPAUTH       => CURLAUTH_BASIC,
             CURLOPT_USERPWD        => $this->username . ':' . $this->password,
-            CURLOPT_RETURNTRANSFER => TRUE,
-            CURLOPT_FOLLOWLOCATION => TRUE,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
             CURLOPT_HTTPHEADER     => array('Content-type: application/json'),
-            CURLOPT_POST           => TRUE,
+            CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => $request
         );
 
         // This prevents users from getting the following warning when open_basedir is set:
-        // Warning: curl_setopt() [function.curl-setopt]: CURLOPT_FOLLOWLOCATION cannot be activated when in safe_mode or an open_basedir is set
+        // Warning: curl_setopt() [function.curl-setopt]:
+        //   CURLOPT_FOLLOWLOCATION cannot be activated when in safe_mode or an open_basedir is set
         if (ini_get('open_basedir')) {
             unset($options[CURLOPT_FOLLOWLOCATION]);
         }
 
         if ($this->proto == 'https') {
             // If the CA Certificate was specified we change CURL to look for it
-            if ($this->CACertificate != null) {
+            if (!empty($this->CACertificate)) {
                 $options[CURLOPT_CAINFO] = $this->CACertificate;
                 $options[CURLOPT_CAPATH] = DIRNAME($this->CACertificate);
-            }
-            else {
-                // If not we need to assume the SSL cannot be verified so we set this flag to FALSE to allow the connection
-                $options[CURLOPT_SSL_VERIFYPEER] = FALSE;
+            } else {
+                // If not we need to assume the SSL cannot be verified
+                // so we set this flag to FALSE to allow the connection
+                $options[CURLOPT_SSL_VERIFYPEER] = false;
             }
         }
 
@@ -163,7 +170,7 @@ class Bitcoin {
 
         // Execute the request and decode to an array
         $this->raw_response = curl_exec($curl);
-        $this->response     = json_decode($this->raw_response, TRUE);
+        $this->response     = json_decode($this->raw_response, true);
 
         // If the status is not 200, something is wrong
         $this->status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
@@ -180,8 +187,7 @@ class Bitcoin {
         if ($this->response['error']) {
             // If bitcoind returned an error, put that in $this->error
             $this->error = $this->response['error']['message'];
-        }
-        elseif ($this->status != 200) {
+        } elseif ($this->status != 200) {
             // If bitcoind didn't return a nice error message, we need to make our own
             switch ($this->status) {
                 case 400:
@@ -200,7 +206,7 @@ class Bitcoin {
         }
 
         if ($this->error) {
-            return FALSE;
+            return false;
         }
 
         return $this->response['result'];
