@@ -129,7 +129,7 @@ class Bitcoin
 
         // Build the request, it's ok that params might have any empty array
         $request = json_encode(array(
-            'method' => $method,
+            'method' => strtolower($method),
             'params' => $params,
             'id'     => $this->id
         ));
