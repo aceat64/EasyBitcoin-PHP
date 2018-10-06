@@ -2,8 +2,9 @@
 /*
 MultiChain API
 Copyright (c) 2018 baumann.at
+V 1.0 (6.10.2018)
 
-Forked from EasyBitcoin-PHP, Copyright (c) 13 Andrew LeCody
+Forked from EasyBitcoin-PHP, Copyright (c) 2013 Andrew LeCody
 https://github.com/aceat64/EasyMultiChain-PHP
 
 A simple class for making calls to Multichain's API using PHP.
