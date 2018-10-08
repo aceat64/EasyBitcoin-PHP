@@ -1,15 +1,17 @@
 <?php
 /*
-EasyBitcoin-PHP
+MultiChain API
+Copyright (c) 2018 baumann.at
+V 1.0 (6.10.2018)
 
-A simple class for making calls to Bitcoin's API using PHP.
-https://github.com/aceat64/EasyBitcoin-PHP
+Forked from EasyBitcoin-PHP, Copyright (c) 2013 Andrew LeCody
+https://github.com/aceat64/EasyMultiChain-PHP
+
+A simple class for making calls to Multichain's API using PHP.
 
 ====================
 
 The MIT License (MIT)
-
-Copyright (c) 2013 Andrew LeCody
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,41 +33,53 @@ THE SOFTWARE.
 
 ====================
 
-// Initialize Bitcoin connection/object
-$bitcoin = new Bitcoin('username','password');
-
-// Optionally, you can specify a host and port.
-$bitcoin = new Bitcoin('username','password','host','port');
+// Initialize MultiChain connection/object
+$MultiChain = new MultiChain('username','password','host','port');
 // Defaults are:
 //	host = localhost
-//	port = 8332
+//	port = 2286
 //	proto = http
+
+// Check, if initialization worked (i.e. curl is installed)
+if (!$MultiChain->initOK) {
+	echo($MultiChain->error);
+	exit();
+}
+
 
 // If you wish to make an SSL connection you can set an optional CA certificate or leave blank
 // This will set the protocol to HTTPS and some CURL flags
-$bitcoin->setSSL('/full/path/to/mycertificate.cert');
+$MultiChain->setSSL('/full/path/to/mycertificate.cert');
 
-// Make calls to bitcoind as methods for your object. Responses are returned as an array.
+// Make calls to MultiChaind as methods for your object. Responses are returned as an array.
 // Examples:
-$bitcoin->getinfo();
-$bitcoin->getrawtransaction('0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098',1);
-$bitcoin->getblock('000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f');
+$MultiChain->getinfo();
+$MultiChain->getrawtransaction('0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098',1);
+$MultiChain->getblock('000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f');
+
+// if you called getinfo() at least once, the major version of multichaind is set as integer in 
+// $this->versionMajor
+$res = $MultiChain->getinfo();
+if ($MultiChain->versionMajor == 2) {
+// code, which is for new versions only ...
+}
+
 
 // The full response (not usually needed) is stored in $this->response
 // while the raw JSON is stored in $this->raw_response
 
 // When a call fails for any reason, it will return FALSE and put the error message in $this->error
 // Example:
-echo $bitcoin->error;
+echo $MultiChain->error;
 
 // The HTTP status code can be found in $this->status and will either be a valid HTTP status code
 // or will be 0 if cURL was unable to connect.
 // Example:
-echo $bitcoin->status;
+echo $MultiChain->status;
 
 */
 
-class Bitcoin
+class MultiChain
 {
     // Configuration options
     private $username;
@@ -81,6 +95,8 @@ class Bitcoin
     public $error;
     public $raw_response;
     public $response;
+    public $initOK;
+    public $versionMajor;
 
     private $id = 0;
 
@@ -92,17 +108,25 @@ class Bitcoin
      * @param string $proto
      * @param string $url
      */
-    public function __construct($username, $password, $host = 'localhost', $port = 8332, $url = null)
+    public function __construct($username, $password, $host = 'localhost', $port = 2286, $url = null)
     {
         $this->username      = $username;
         $this->password      = $password;
         $this->host          = $host;
         $this->port          = $port;
         $this->url           = $url;
+        $this->versionMajor  = null;
 
         // Set some defaults
         $this->proto         = 'http';
         $this->CACertificate = null;
+        
+        if (!function_exists('curl_init')) {
+        	$this->error = 'curl not installed';
+        	$this->initOK = false;
+        } else {
+        	$this->initOK = true;
+        }	
     }
 
     /**
@@ -172,6 +196,12 @@ class Bitcoin
         $this->raw_response = curl_exec($curl);
         $this->response     = json_decode($this->raw_response, true);
 
+				if ($method == 'getinfo') {
+				  if (isset($this->response['result']['version'][0])) {
+				  	$this->versionMajor = (integer) $this->response['result']['version'][0];
+				  }
+				}
+
         // If the status is not 200, something is wrong
         $this->status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
@@ -185,10 +215,10 @@ class Bitcoin
         }
 
         if ($this->response['error']) {
-            // If bitcoind returned an error, put that in $this->error
+            // If MultiChaind returned an error, put that in $this->error
             $this->error = $this->response['error']['message'];
         } elseif ($this->status != 200) {
-            // If bitcoind didn't return a nice error message, we need to make our own
+            // If MultiChaind didn't return a nice error message, we need to make our own
             switch ($this->status) {
                 case 400:
                     $this->error = 'HTTP_BAD_REQUEST';
@@ -201,6 +231,13 @@ class Bitcoin
                     break;
                 case 404:
                     $this->error = 'HTTP_NOT_FOUND';
+                    break;
+// extended error codes corresponding to multichain/src/rpc/rpcprotocol.h                    
+                case 500:
+                    $this->error = 'HTTP_INTERNAL_SERVER_ERROR';
+                    break;
+                case 503:
+                    $this->error = 'HTTP_SERVICE_UNAVAILABLE';
                     break;
             }
         }
