@@ -232,6 +232,13 @@ class MultiChain
                 case 404:
                     $this->error = 'HTTP_NOT_FOUND';
                     break;
+// extended error codes corresponding to multichain/src/rpc/rpcprotocol.h                    
+                case 500:
+                    $this->error = 'HTTP_INTERNAL_SERVER_ERROR';
+                    break;
+                case 503:
+                    $this->error = 'HTTP_SERVICE_UNAVAILABLE';
+                    break;
             }
         }
 
