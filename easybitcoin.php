@@ -41,6 +41,12 @@ $bitcoin = new Bitcoin('username','password','host','port');
 //	port = 8332
 //	proto = http
 
+// Check, if initialization worked (i.e. curl is installed)
+if (!$bitcoin->initOK) {
+	echo($bitcoin->error);
+	exit();
+}
+
 // If you wish to make an SSL connection you can set an optional CA certificate or leave blank
 // This will set the protocol to HTTPS and some CURL flags
 $bitcoin->setSSL('/full/path/to/mycertificate.cert');
@@ -81,6 +87,8 @@ class Bitcoin
     public $error;
     public $raw_response;
     public $response;
+    public $initOK;
+
 
     private $id = 0;
 
@@ -103,6 +111,13 @@ class Bitcoin
         // Set some defaults
         $this->proto         = 'http';
         $this->CACertificate = null;
+
+        if (!function_exists('curl_init')) {
+        	$this->error = 'curl not installed';
+        	$this->initOK = false;
+        } else {
+        	$this->initOK = true;
+        }	
     }
 
     /**
@@ -201,6 +216,9 @@ class Bitcoin
                     break;
                 case 404:
                     $this->error = 'HTTP_NOT_FOUND';
+                    break;
+                case 500:
+                    $this->error = 'HTTP_INTERNAL_SERRVER_ERROR';
                     break;
             }
         }
