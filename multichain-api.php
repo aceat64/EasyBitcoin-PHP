@@ -3,6 +3,7 @@
 MultiChain API
 Copyright (c) 2018 baumann.at
 V 1.0 (6.10.2018)
+V 1.1 (21.11.2018): new property "timeout" for socket connection
 
 Forked from EasyBitcoin-PHP, Copyright (c) 2013 Andrew LeCody
 https://github.com/aceat64/EasyMultiChain-PHP
@@ -107,14 +108,16 @@ class MultiChain
      * @param int $port
      * @param string $proto
      * @param string $url
+     * @param int $timeout
      */
-    public function __construct($username, $password, $host = 'localhost', $port = 2286, $url = null)
+    public function __construct($username, $password, $host = 'localhost', $port = 2286, $url = null, $timeout = 10)
     {
         $this->username      = $username;
         $this->password      = $password;
         $this->host          = $host;
         $this->port          = $port;
         $this->url           = $url;
+        $this->timeout       = $timeout;
         $this->versionMajor  = null;
 
         // Set some defaults
@@ -165,7 +168,8 @@ class MultiChain
             CURLOPT_USERPWD        => $this->username . ':' . $this->password,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS      => 10,
+            CURLOPT_MAXREDIRS      => 2, 
+            CURLOPT_CONNECTTIMEOUT => $this->timeout,
             CURLOPT_HTTPHEADER     => array('Content-type: application/json'),
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => $request
